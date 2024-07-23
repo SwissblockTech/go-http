@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: http-server
 data:
-  DB_HOST: postgres
+  DB_HOST: postgresql
   DB_USERNAME: postgres
   DB_PASSWORD: supersecret
   DB_NAME: postgres

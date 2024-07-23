@@ -17,4 +17,4 @@ commonAnnotations:
 
 images:
   - name: bygui86/http-client
-    newTag: v1.0.0
+    newTag: v1.0.0@sha256:27238b476e2b65de89fc6982967ea1719f02cf05c79ed27ee0a4f9a5eda1e633 #amd64

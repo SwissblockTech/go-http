@@ -17,4 +17,4 @@ commonAnnotations:
 
 images:
   - name: bygui86/http-server
-    newTag: v1.0.0
+    newTag: v1.0.0@sha256:e609fe6884e0a86312008f859f0ccddcc8d163ab4ddddfe2bbc1dc917c955e21 #amd64
