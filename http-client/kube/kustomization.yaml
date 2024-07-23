@@ -7,8 +7,14 @@ resources:
   - deployment.yaml
   - service.yaml
 
-commonLabels:
-  app: http-client
+labels:
+  - includeSelectors: true
+    pairs:
+      app: http-client
 
 commonAnnotations:
   version: v1.0.0
+
+images:
+  - name: bygui86/http-client
+    newTag: v1.0.0

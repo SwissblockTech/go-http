@@ -4,6 +4,7 @@ metadata:
   name: http-server
 spec:
   replicas: 1
+  revisionHistoryLimit: 5
   selector:
     matchLabels:
       app: http-server
@@ -15,7 +16,7 @@ spec:
       terminationGracePeriodSeconds: 15
       containers:
         - name: http-server
-          image: bygui86/http-server:v1.0.0
+          image: bygui86/http-server
           imagePullPolicy: Always
           envFrom:
             - configMapRef:

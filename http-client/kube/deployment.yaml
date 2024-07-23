@@ -4,6 +4,7 @@ metadata:
   name: http-client
 spec:
   replicas: 1
+  revisionHistoryLimit: 5
   selector:
     matchLabels:
       app: http-client
@@ -15,7 +16,7 @@ spec:
       terminationGracePeriodSeconds: 15
       containers:
         - name: http-client
-          image: bygui86/http-client:v1.0.0
+          image: bygui86/http-client
           imagePullPolicy: Always
           envFrom:
             - configMapRef:
