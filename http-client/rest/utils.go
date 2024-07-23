@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
@@ -110,30 +109,4 @@ func closeBody(body io.ReadCloser) {
 func (s *Server) setRequestHeaders(restRequest *http.Request) {
 	restRequest.Header.Set(headerAccept, headerApplicationJson)
 	restRequest.Header.Set(headerUserAgent, headerUserAgentClient)
-	ip, ipErr := getPublicIp()
-	if ipErr != nil {
-		logging.SugaredLog.Errorf("Get public IP address failed: %s", ipErr.Error())
-	} else {
-		restRequest.Header.Set(headerCustomSource, ip)
-	}
-}
-
-func getPublicIp() (string, error) {
-	url := "https://api.ipify.org?format=text"
-	logging.SugaredLog.Infof("Get public IP address from %s", url)
-
-	response, respErr := http.Get(url)
-	if respErr != nil {
-		return "", respErr
-	}
-	defer closeBody(response.Body)
-
-	ip, bodyErr := ioutil.ReadAll(response.Body)
-	if bodyErr != nil {
-		return "", bodyErr
-	}
-
-	logging.SugaredLog.Infof("Public IP '%s' will be added as 'Custom-Source' header", ip)
-
-	return string(ip), nil
 }

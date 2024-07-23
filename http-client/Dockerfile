@@ -1,7 +1,7 @@
 
 # --- buider stage
 
-FROM golang:1.15-buster AS builder
+FROM golang:1.22.5 AS builder
 
 # Set working directory
 WORKDIR /src
@@ -24,7 +24,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /bin/app
 
 # --- final stage
 
-FROM alpine
+FROM alpine:3.20.2
 
 # Install additionals
 RUN apk add --no-cache bash iputils curl bind-tools
@@ -37,8 +37,6 @@ COPY --from=builder --chown=1001 /bin/app .
 EXPOSE 8080
 ## Metrics
 EXPOSE 9090
-## KubeProbes
-# EXPOSE 9091
 
 # Set user
 USER 1001

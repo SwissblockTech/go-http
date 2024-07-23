@@ -9,6 +9,5 @@ type Product struct {
 }
 
 func (p *Product) String() string {
-	return fmt.Sprintf("ID[%d], Name[%s], Price[%f]",
-		p.ID, p.Name, p.Price)
+	return fmt.Sprintf("ID[%d], Name[%s], Price[%f]", p.ID, p.Name, p.Price)
 }
