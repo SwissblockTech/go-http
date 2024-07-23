@@ -3,6 +3,16 @@ version: '3'
 tasks:
 
   build:
+    desc: Build code
+    cmds:
+      - go build
+
+  run:
+    desc: Run application
+    cmds:
+      - godotenv -f local.env go run main.go
+
+  container-build:
     desc: Build http-client container image
     requires:
       vars: [ VERSION ]
@@ -10,16 +20,31 @@ tasks:
       - docker buildx build . -f Dockerfile -t bygui86/http-client:{{.VERSION}} --platform linux/amd64,linux/arm64
       - docker buildx build . -f Dockerfile -t bygui86/http-client:{{.VERSION}} --load
 
-  push:
+  container-push:
     desc: Push http-client container image to container registry
     requires:
       vars: [ VERSION ]
     cmds:
       - docker push bygui86/http-client:{{.VERSION}}
 
-  build-push:
+  container-build-push:
     desc: Build & push http-client container image to container registry
     requires:
       vars: [ VERSION ]
     cmds:
       - docker buildx build . -f Dockerfile -t bygui86/http-client:{{.VERSION}} --platform linux/amd64,linux/arm64 --push
+
+  deploy:
+    desc: Deploy application to K8s
+    cmds:
+      - kustomize build kube/ | kubectl apply -f -
+
+  delete:
+    desc: Delete application from K8s
+    cmds:
+      - kustomize build kube/ | kubectl delete -f -
+
+  follow-logs:
+    desc: Show and follow application logs from K8s
+    cmds:
+      - kubectl logs -l app=http-client --tail 10000 -f
