@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"net/http"
@@ -10,20 +11,15 @@ import (
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 
-	"github.com/swisslockTech/go-http/http-server/commons"
 	"github.com/swisslockTech/go-http/http-server/database"
 	"github.com/swisslockTech/go-http/http-server/logging"
 )
 
 func (s *Server) getProducts(writer http.ResponseWriter, request *http.Request) {
-	span, ctx := retrieveSpanAndCtx(request, "get-products-handler")
-	defer span.Finish()
-
 	startTimer := time.Now()
+	ctx := context.Background()
 
 	logging.Log.Info("Get products")
-
-	span.SetTag("app", commons.ServiceName)
 
 	count, _ := strconv.Atoi(request.FormValue("count"))
 	start, _ := strconv.Atoi(request.FormValue("start"))
@@ -37,15 +33,8 @@ func (s *Server) getProducts(writer http.ResponseWriter, request *http.Request) 
 	if err != nil {
 		errMsg := "Get products failed: " + err.Error()
 		sendErrorResponse(writer, http.StatusInternalServerError, errMsg)
-
-		span.SetTag("products-found", 0)
-		span.SetTag("error", errMsg)
-		span.LogKV("products-found", 0, "error", errMsg)
 		return
 	}
-
-	span.SetTag("products-found", len(products))
-	span.LogKV("products-found", len(products))
 
 	sendJsonResponse(writer, http.StatusOK, products)
 
@@ -54,27 +43,18 @@ func (s *Server) getProducts(writer http.ResponseWriter, request *http.Request) 
 }
 
 func (s *Server) getProduct(writer http.ResponseWriter, request *http.Request) {
-	span, ctx := retrieveSpanAndCtx(request, "get-product-handler")
-	defer span.Finish()
-
 	startTimer := time.Now()
-
-	span.SetTag("app", commons.ServiceName)
+	ctx := context.Background()
 
 	vars := mux.Vars(request)
 	id, idErr := strconv.Atoi(vars["id"])
 	if idErr != nil {
 		errMsg := "Get product failed: Invalid product ID"
 		sendErrorResponse(writer, http.StatusBadRequest, errMsg)
-
-		span.SetTag("error", errMsg)
-		span.LogKV("error", errMsg)
 		return
 	}
 
 	logging.SugaredLog.Infof("Get product by ID: %d", id)
-
-	span.SetTag("product-id", id)
 
 	product := &database.Product{ID: id}
 	getErr := database.GetProduct(s.db, product, ctx)
@@ -88,15 +68,8 @@ func (s *Server) getProduct(writer http.ResponseWriter, request *http.Request) {
 			errMsg = getErr.Error()
 			sendErrorResponse(writer, http.StatusInternalServerError, errMsg)
 		}
-
-		span.SetTag("product-found", false)
-		span.SetTag("error", errMsg)
-		span.LogKV("product-id", id, "product-found", false, "error", errMsg)
 		return
 	}
-
-	span.SetTag("product-found", true)
-	span.LogKV("product-id", id, "product-found", true)
 
 	sendJsonResponse(writer, http.StatusOK, product)
 
@@ -105,22 +78,14 @@ func (s *Server) getProduct(writer http.ResponseWriter, request *http.Request) {
 }
 
 func (s *Server) createProduct(writer http.ResponseWriter, request *http.Request) {
-	span, ctx := retrieveSpanAndCtx(request, "create-product-handler")
-	defer span.Finish()
-
 	startTimer := time.Now()
-
-	span.SetTag("app", commons.ServiceName)
+	ctx := context.Background()
 
 	var product *database.Product
 	unmarshErr := json.NewDecoder(request.Body).Decode(&product)
 	if unmarshErr != nil {
 		errMsg := "Create product failed: invalid request payload"
 		sendErrorResponse(writer, http.StatusBadRequest, errMsg)
-
-		span.SetTag("product-created", false)
-		span.SetTag("error", errMsg)
-		span.LogKV("product-created", false, "error", errMsg)
 		return
 	}
 	defer request.Body.Close()
@@ -131,16 +96,8 @@ func (s *Server) createProduct(writer http.ResponseWriter, request *http.Request
 	if createErr != nil {
 		errMsg := "Create product failed: " + createErr.Error()
 		sendErrorResponse(writer, http.StatusInternalServerError, errMsg)
-
-		span.SetTag("product-created", false)
-		span.SetTag("error", errMsg)
-		span.LogKV("product-created", false, "error", errMsg)
 		return
 	}
-
-	span.SetTag("product", product.String())
-	span.SetTag("product-created", true)
-	span.LogKV("product", product.String(), "product-created", true)
 
 	sendJsonResponse(writer, http.StatusCreated, product)
 
@@ -149,22 +106,14 @@ func (s *Server) createProduct(writer http.ResponseWriter, request *http.Request
 }
 
 func (s *Server) updateProduct(writer http.ResponseWriter, request *http.Request) {
-	span, ctx := retrieveSpanAndCtx(request, "update-product-handler")
-	defer span.Finish()
-
 	startTimer := time.Now()
-
-	span.SetTag("app", commons.ServiceName)
+	ctx := context.Background()
 
 	vars := mux.Vars(request)
 	id, idErr := strconv.Atoi(vars["id"])
 	if idErr != nil {
 		errMsg := "Update product failed: invalid product ID"
 		sendErrorResponse(writer, http.StatusBadRequest, errMsg)
-
-		span.SetTag("product-updated", false)
-		span.SetTag("error", errMsg)
-		span.LogKV("product-updated", false, "error", errMsg)
 		return
 	}
 
@@ -173,32 +122,19 @@ func (s *Server) updateProduct(writer http.ResponseWriter, request *http.Request
 	if unmarshErr != nil {
 		errMsg := "Update product failed: invalid request payload"
 		sendErrorResponse(writer, http.StatusBadRequest, errMsg)
-
-		span.SetTag("product-updated", false)
-		span.SetTag("error", errMsg)
-		span.LogKV("product-updated", false, "error", errMsg)
 		return
 	}
 	defer request.Body.Close()
 
 	product.ID = id
 	logging.SugaredLog.Infof("Update product: %s", product.String())
-	span.SetTag("product-id", id)
 
 	updateErr := database.UpdateProduct(s.db, product, ctx)
 	if updateErr != nil {
 		errMsg := "Update product failed: " + updateErr.Error()
 		sendErrorResponse(writer, http.StatusInternalServerError, errMsg)
-
-		span.SetTag("product-updated", false)
-		span.SetTag("error", errMsg)
-		span.LogKV("product-updated", false, "error", errMsg)
 		return
 	}
-
-	span.SetTag("product", product.String())
-	span.SetTag("product-updated", true)
-	span.LogKV("product", product.String(), "product-updated", true)
 
 	sendJsonResponse(writer, http.StatusOK, product)
 
@@ -207,41 +143,25 @@ func (s *Server) updateProduct(writer http.ResponseWriter, request *http.Request
 }
 
 func (s *Server) deleteProduct(writer http.ResponseWriter, request *http.Request) {
-	span, ctx := retrieveSpanAndCtx(request, "delete-product-handler")
-	defer span.Finish()
-
 	startTimer := time.Now()
-
-	span.SetTag("app", commons.ServiceName)
+	ctx := context.Background()
 
 	vars := mux.Vars(request)
 	id, idErr := strconv.Atoi(vars["id"])
 	if idErr != nil {
 		errMsg := "Delete product failed: invalid Product ID"
 		sendErrorResponse(writer, http.StatusBadRequest, errMsg)
-
-		span.SetTag("product-deleted", false)
-		span.SetTag("error", errMsg)
-		span.LogKV("product-deleted", false, "error", errMsg)
 		return
 	}
 
 	logging.SugaredLog.Infof("Delete product by ID: %d", id)
-	span.SetTag("product-id", id)
 
 	deleteErr := database.DeleteProduct(s.db, id, ctx)
 	if deleteErr != nil {
 		errMsg := "Delete product failed: " + deleteErr.Error()
 		sendErrorResponse(writer, http.StatusInternalServerError, errMsg)
-
-		span.SetTag("product-deleted", false)
-		span.SetTag("error", errMsg)
-		span.LogKV("product-deleted", false, "error", errMsg)
 		return
 	}
-
-	span.SetTag("product-deleted", true)
-	span.LogKV("product-deleted", true)
 
 	sendJsonResponse(writer, http.StatusOK, map[string]string{"result": "success"})
 

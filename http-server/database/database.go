@@ -1,14 +1,10 @@
 package database
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 
-	"github.com/ExpansiveWorlds/instrumentedsql"
 	"github.com/cenkalti/backoff"
-	"github.com/lib/pq"
-
 	"github.com/swisslockTech/go-http/http-server/logging"
 )
 
@@ -16,10 +12,6 @@ const (
 	// no tracing
 	dbConnectionStringFormat = "host=%s port=%d user=%s password=%s dbname=%s sslmode=%s"
 	dbDriverName             = "postgres"
-
-	// with tracing
-	dbConnectionString       = "postgres://%s:%s@%s:%d/%s?sslmode=%s"
-	instrumentedDbDriverName = "instrumeted-" + dbDriverName
 
 	defaultPingMaxRetry = 10
 )
@@ -37,38 +29,6 @@ func New() (*sql.DB, error) {
 	logging.SugaredLog.Debugf("DB connection string: %s", connString)
 
 	return sql.Open(dbDriverName, connString)
-}
-
-func NewWithWrappedTracing() (*sql.DB, error) {
-	logging.Log.Info("Create new DB connector with tracing")
-
-	cfg := loadConfig()
-
-	// Get a database driver.Connector for a fixed configuration.
-	connString := fmt.Sprintf(dbConnectionString,
-		cfg.dbUsername, cfg.dbPassword,
-		cfg.dbHost, cfg.dbPort,
-		cfg.dbName, cfg.dbSslMode,
-	)
-	logging.SugaredLog.Debugf("DB connection string: %s", connString)
-
-	connector, connErr := pq.NewConnector(connString)
-	if connErr != nil {
-		return nil, connErr
-	}
-
-	sql.Register(
-		instrumentedDbDriverName,
-		instrumentedsql.WrapDriver(
-			connector.Driver(),
-			instrumentedsql.WithLogger(
-				instrumentedsql.LoggerFunc(func(ctx context.Context, msg string, keyvals ...interface{}) {
-					logging.SugaredLog.Infof("%s %v", msg, keyvals)
-				})),
-		),
-	)
-
-	return sql.OpenDB(connector), nil
 }
 
 func InitDb(db *sql.DB) error {

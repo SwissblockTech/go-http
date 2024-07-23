@@ -2,7 +2,6 @@ package rest
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"time"
 
@@ -10,18 +9,12 @@ import (
 	"github.com/swisslockTech/go-http/http-server/logging"
 )
 
-func New(enableTracing bool) (*Server, error) {
+func New() (*Server, error) {
 	logging.Log.Info("Create new REST server")
 
 	cfg := loadConfig()
 
-	var db *sql.DB
-	var dbErr error
-	if enableTracing {
-		db, dbErr = database.NewWithWrappedTracing()
-	} else {
-		db, dbErr = database.New()
-	}
+	db, dbErr := database.New()
 	if dbErr != nil {
 		return nil, dbErr
 	}

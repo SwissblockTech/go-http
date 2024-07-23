@@ -65,7 +65,7 @@ func startMonitoringServer() *monitoring.Server {
 func startRestServer() *rest.Server {
 	logging.Log.Debug("Start REST server")
 
-	server, newErr := rest.New(true)
+	server, newErr := rest.New()
 	if newErr != nil {
 		logging.SugaredLog.Errorf("REST server creation failed: %s", newErr.Error())
 		os.Exit(501)
