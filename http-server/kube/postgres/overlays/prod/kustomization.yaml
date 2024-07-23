@@ -1,0 +1,32 @@
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ip
+
+namePrefix: ip-
+
+resources:
+- ../../base/
+- secret.yaml
+
+patches:
+- path: patch-statefulset.yaml
+
+labels:
+- includeSelectors: true
+  pairs:
+    app: postgresql
+    domain: ip
+    group: databases
+    
+commonAnnotations:
+  exporterVersion: v0.8.0   # WARN: rename it to "exporter-version" together with next upgrade
+  version: "13.1"
+
+images:
+- name: postgres
+  newTag: 13.1@sha256:e35a365d62195862c6c42b0467a379558e9daa0b37f706e435edb961aad74131
+- name: wrouesnel/postgres_exporter
+  newTag: v0.8.0@sha256:520fcd04d6c8f922d800d89ae96c021f4afd22e376c4b88260a8b780e3375dbe
+
