@@ -1,0 +1,25 @@
+version: '3'
+
+tasks:
+
+  build:
+    desc: Build http-server container image
+    requires:
+      vars: [ VERSION ]
+    cmds:
+      - docker buildx build . -f Dockerfile -t bygui86/http-server:{{.VERSION}} --platform linux/amd64,linux/arm64
+      - docker buildx build . -f Dockerfile -t bygui86/http-server:{{.VERSION}} --load
+
+  push:
+    desc: Push http-server container image to container registry
+    requires:
+      vars: [ VERSION ]
+    cmds:
+      - docker push bygui86/http-server:{{.VERSION}}
+
+  build-push:
+    desc: Build & push http-server container image to container registry
+    requires:
+      vars: [ VERSION ]
+    cmds:
+      - docker buildx build . -f Dockerfile -t bygui86/http-server:{{.VERSION}} --platform linux/amd64,linux/arm64 --push
